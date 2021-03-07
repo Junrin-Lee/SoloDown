@@ -209,28 +209,18 @@ def get_kg_music_parm(music_url):
     s_id = query_dict["s"]
     print(s_id)
 
-    url = "https://cgi.kg.qq.com/fcgi-bin/kg_ugc_getdetail"
-
-    querystring = {"inCharset": "GB2312", "outCharset": "utf-8", "v": "4", "shareid": s_id,
-                   "_": str(round(time.time() * 1000))}
-
     headers = {
-        'Host': "cgi.kg.qq.com",
-        'Accept-Encoding': "gzip, deflate",
-        'Connection': "keep-alive",
-        'cache-control': "no-cache"
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36'
     }
+    html = requests.request("GET", music_url, headers=headers).text
 
-    response = requests.request("GET", url, headers=headers, params=querystring)
+    song_name_res = re.search(r'<h2 class="play_name">(?P<song_name>[\s\S]*?)</h2>', html)
+    song_name = song_name_res.groupdict()['song_name'].strip()
 
-    print(response.text)
-    music_data = loads_jsonp(response.text)["data"]
-    print(music_data["song_name"] + ".m4a")
-    play_url = "http://node.kg.qq.com/cgi/fcgi-bin/fcg_get_play_url?shareid=" + s_id[0]
+    play_url = "http://cgi.kg.qq.com/fcgi-bin/fcg_get_play_url?shareid=" + s_id[0]
     print(play_url)
-    print(music_data["playurl"])
     # 文件名不能包含下列任何字符：\/:*?"<>|       英文字符
-    music_name = re.sub(r'[\\/:*?"<>|\r\n]+', "", music_data["song_name"])
+    music_name = re.sub(r'[\\/:*?"<>|\r\n]+', "", song_name)
     music_parm = [music_name, play_url]
     return music_parm
 
